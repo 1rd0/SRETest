@@ -37,3 +37,8 @@ kubectl get all
 6) PodDisruptionBudget: минимум 50% подов всегда доступны.
 
 7) HPA: авто-скейл подов по CPU.
+   
+
+<p align="center">
+ <img   src="img.png" alt="qr"/>
+</p>
