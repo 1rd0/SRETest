@@ -1,17 +1,9 @@
-apiVersion: v1
-kind: Pod
+apiVersion: policy/v1
+kind: PodDisruptionBudget
 metadata:
-  name: $title$
-  labels:
-    role: $title$
+  name: mindbox-web-testsre-pdb
 spec:
-  containers:
-    - name: $title$
-      image: $nginx$
-      imagePullPolicy: IfNotPresent
-      ports:
-        - name: $title$
-          containerPort: $80$
-          protocol: $TCP$
-  restartPolicy: Always
-  $END$
+  minAvailable: 50%  # Минимум 2/4
+  selector:
+    matchLabels:
+      app: mindbox-web-testsre

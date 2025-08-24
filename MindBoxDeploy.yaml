@@ -1,26 +1,74 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: title
+  name: mindbox-web-testsre-deployment
   labels:
-    app: title
+    app: mindbox-web-testsre
 spec:
-  replicas: 1
+  # 2 HPA будет менять это число; стартуем экономно, но не в ущерб HA
+  replicas: 4  # Начальное количество HPA будет масштабировать
   selector:
     matchLabels:
-      app: title
+      app: mindbox-web-testsre
   template:
     metadata:
-      name: title
       labels:
-        app: title
+        app: mindbox-web-testsre
     spec:
+      # Грейсфул-шатдаун
+      terminationGracePeriodSeconds: 30
       containers:
-        - name: title
-          image: nginx
-          imagePullPolicy: IfNotPresent
+        - name: mindbox-web-testsre
+          image: nginx:alpine
           ports:
-            - containerPort: 80
-              protocol: TCP
-      restartPolicy: Always
+            - containerPort: 8080
+              #Работа с ресурсами
+          resources:
+            requests:
+              cpu: "100m"  # 0.1 CPU для стабильного состояния и экономии ресурсов
+              memory: "128Mi"
+            limits:
+              cpu: "1"  # Burst до 1 CPU
+              memory: "256Mi"  #Делаем запас для пика
+
+          #Чтобы не держать мертвые поды испольуем пробы
+
+          #livenessProbe:
+            #httpGet:
+              #path: /healthz
+              #port: 8080
+            #initialDelaySeconds: 10  # делаем  делэй
+            #periodSeconds: 10
+          #readinessProbe:
+              #httpGet:
+                #path: /ready
+                #port: 8080
+              #initialDelaySeconds: 10
+              #periodSeconds: 5
+
+              #Добавляем безопастности
+          securityContext:
+            allowPrivilegeEscalation: false
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh","-c","sleep 10" ]#даем время на дренаж коннекшенов
+
+      topologySpreadConstraints:
+        - maxSkew: 1  # Максимум 1 под разницы между зонами
+          topologyKey: topology.kubernetes.io/zone  # Распределяем по зонам a,b,c...
+          whenUnsatisfiable: ScheduleAnyway  # Используем Soft чтобы не блокировать деплой
+
+          labelSelector:
+            matchLabels:
+              app: mindbox-web-testsre
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%  # Оставляем 1 под живым при обновлении конфигурации
+      maxSurge: 25%  # Разрешаем 1 под добавить есл будет необхожимость
+
+
+
       

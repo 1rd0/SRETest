@@ -1,17 +1,18 @@
-apiVersion: v1
-kind: Pod
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: $title$
-  labels:
-    role: $title$
+  name: mindbox-web-testsre-hpa
 spec:
-  containers:
-    - name: $title$
-      image: $nginx$
-      imagePullPolicy: IfNotPresent
-      ports:
-        - name: $title$
-          containerPort: $80$
-          protocol: $TCP$
-  restartPolicy: Always
-  $END$
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mindbox-web-testsre-deployment
+  minReplicas: 1  # Ночью масштабировать вниз
+  maxReplicas: 6  # предотвращает over-scaling делаем запас
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60

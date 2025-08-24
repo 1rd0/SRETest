@@ -1,13 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: $title$
+  name: mindbox-web-testsre-service
 spec:
   selector:
-    app: $title$
+    app: mindbox-web-testsre
   ports:
-    - protocol: $TCP$
-      port: $80$
-      targetPort: $8080$
-  type: NodePort
-  $END$
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP # Используем по умолчанию, однако если нужно
+                  #чтобы сервис был доступен снаружи используем
+                  #LoadBalancer или Ingress/ALB.
+
